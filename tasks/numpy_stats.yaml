@@ -1,0 +1,36 @@
+name: numpy_descriptive_stats
+repo_url: https://github.com/numpy/numpy
+description: >
+  Use NumPy to compute descriptive statistics (mean, std, min, max, median)
+  for a list of numbers. Return all five statistics in a dict.
+inputs:
+  values: [4, 7, 13, 2, 1, 8, 9, 3]
+expected_output: >
+  A dict with keys: mean, std, min, max, median. All values are floats.
+
+# Pre-written validation tests — agent never sees these.
+validation_tests: |
+  from tool import run_tool
+
+  VALS = [4.0, 7.0, 13.0, 2.0, 1.0, 8.0, 9.0, 3.0]
+
+  def test_returns_all_stats():
+      result = run_tool(values=VALS)
+      assert isinstance(result, dict), "run_tool must return a dict"
+      for key in ("mean", "std", "min", "max", "median"):
+          assert key in result, f"Missing key: {key}"
+
+  def test_mean_correct():
+      result = run_tool(values=VALS)
+      # sum=47, n=8, mean=5.875
+      assert abs(result["mean"] - 5.875) < 0.01, f"mean={result['mean']}, expected 5.875"
+
+  def test_min_max_correct():
+      result = run_tool(values=VALS)
+      assert result["min"] == 1.0, f"min={result['min']}, expected 1"
+      assert result["max"] == 13.0, f"max={result['max']}, expected 13"
+
+  def test_median_correct():
+      result = run_tool(values=VALS)
+      # sorted: [1,2,3,4,7,8,9,13], median=(4+7)/2=5.5
+      assert abs(result["median"] - 5.5) < 0.01, f"median={result['median']}, expected 5.5"

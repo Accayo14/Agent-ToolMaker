@@ -1,0 +1,41 @@
+name: conch_extract_features
+repo_url: https://github.com/mahmoodlab/CONCH
+description: >
+  Perform feature extraction on a pathology image using CONCH (CONtrastive learning
+  from Captions for Histopathology). Returns a feature vector as a list of floats.
+  Requires HuggingFace access token (HF_TOKEN env var) — request access at
+  https://huggingface.co/MahmoodLab/CONCH
+inputs:
+  input_image: "/tmp/test_patch.png"
+expected_output: >
+  Dict with key 'features' containing a list of floats (512-dimensional feature vector).
+requires_gpu: true
+# STATUS: Blocked — requires approved HuggingFace access to MahmoodLab/CONCH (gated model)
+# Set HF_TOKEN env var and request access before running.
+
+validation_tests: |
+  import numpy as np
+  from PIL import Image
+  from tool import run_tool
+
+  def _make_patch(path, size=(224, 224)):
+      arr = np.random.randint(100, 230, (*size, 3), dtype=np.uint8)
+      Image.fromarray(arr).save(path)
+
+  def test_returns_feature_vector():
+      img_path = "/tmp/conch_val.png"
+      _make_patch(img_path)
+      result = run_tool(input_image=img_path)
+      assert isinstance(result, dict)
+      fv_key = next((k for k in result if isinstance(result[k], list)), None)
+      assert fv_key, f"No list value found. Keys: {list(result.keys())}"
+      fv = result[fv_key]
+      assert len(fv) > 0
+
+  def test_feature_vector_numeric():
+      img_path = "/tmp/conch_val2.png"
+      _make_patch(img_path)
+      result = run_tool(input_image=img_path)
+      fv_key = next((k for k in result if isinstance(result[k], list)), None)
+      fv = result[fv_key]
+      assert all(isinstance(x, (int, float)) for x in fv[:10])

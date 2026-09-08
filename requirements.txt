@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+groq
+openai
+gitpython
+pyyaml
+python-dotenv
+e2b-code-interpreter

@@ -1,0 +1,41 @@
+name: gc_content
+repo_url: https://github.com/biopython/biopython
+description: >
+  Use BioPython to calculate the GC content of a DNA sequence.
+  Return the GC percentage as a float between 0 and 100.
+inputs:
+  sequence: "ATGCGATCG"
+expected_output: "A float representing GC content percentage, e.g. 53.8"
+
+# Pre-written validation tests — agent never sees these.
+# These mirror TM-Bench: independent human-authored correctness checks.
+validation_tests: |
+  from tool import run_tool
+
+  def test_known_gc_value():
+      # GCGC is 100% GC
+      result = run_tool(sequence="GCGC")
+      assert isinstance(result, dict), "run_tool must return a dict"
+      key = [k for k in result if "gc" in k.lower()]
+      assert key, f"Expected a 'gc' key in result, got: {result}"
+      assert abs(result[key[0]] - 100.0) < 0.1, f"Expected 100.0, got {result[key[0]]}"
+
+  def test_known_at_only():
+      # ATAT is 0% GC
+      result = run_tool(sequence="ATAT")
+      key = [k for k in result if "gc" in k.lower()]
+      assert key
+      assert abs(result[key[0]] - 0.0) < 0.1, f"Expected 0.0, got {result[key[0]]}"
+
+  def test_mixed_sequence():
+      # ATGCGATCG: G+C = G,C,G,C,G = 5 out of 9 = 55.56%
+      result = run_tool(sequence="ATGCGATCG")
+      key = [k for k in result if "gc" in k.lower()]
+      assert key
+      assert 50 <= result[key[0]] <= 60, f"Expected ~55.6, got {result[key[0]]}"
+
+  def test_returns_number_not_string():
+      result = run_tool(sequence="ATGC")
+      key = [k for k in result if "gc" in k.lower()]
+      assert key
+      assert isinstance(result[key[0]], (int, float)), "GC content must be numeric"

@@ -1,0 +1,53 @@
+name: retfound_feature_vector
+repo_url: https://github.com/rmaphoh/RETFound_MAE
+description: >
+  Extract the feature vector for a retinal image using the RETFound pretrained
+  vit_large_patch16 model. The model weights are available on HuggingFace
+  (rmaphoh/RETFound-cfp). Return the feature vector as a list of floats.
+inputs:
+  image_file: "/tmp/retinal_test.jpg"
+expected_output: >
+  Dict with key 'feature_vector' containing a list of floats (typically 1024 elements
+  for ViT-Large).
+requires_gpu: true
+
+validation_tests: |
+  import numpy as np
+  from PIL import Image
+  from tool import run_tool
+
+  def _make_test_image(path, size=(224, 224)):
+      arr = np.random.randint(0, 255, (*size, 3), dtype=np.uint8)
+      Image.fromarray(arr).save(path)
+
+  def test_returns_feature_vector():
+      img_path = "/tmp/val_retina.jpg"
+      _make_test_image(img_path)
+      result = run_tool(image_file=img_path)
+      assert isinstance(result, dict), f"Expected dict, got {type(result)}"
+      fv_key = next((k for k in result if "feat" in k.lower() or "embed" in k.lower()
+                     or "vector" in k.lower() or "repr" in k.lower()), None)
+      assert fv_key, f"No feature vector key. Got: {list(result.keys())}"
+      fv = result[fv_key]
+      assert isinstance(fv, list), f"Feature vector must be list, got {type(fv)}"
+      assert len(fv) > 0, "Feature vector is empty"
+
+  def test_feature_vector_contains_floats():
+      img_path = "/tmp/val_retina2.jpg"
+      _make_test_image(img_path)
+      result = run_tool(image_file=img_path)
+      fv_key = next((k for k in result if isinstance(result[k], list) and len(result[k]) > 0), None)
+      assert fv_key
+      fv = result[fv_key]
+      assert all(isinstance(x, (int, float)) for x in fv[:10]), (
+          f"Feature vector elements must be numeric, got: {[type(x) for x in fv[:5]]}"
+      )
+
+  def test_png_input():
+      img_path = "/tmp/val_retina.png"
+      _make_test_image(img_path)
+      result = run_tool(image_file=img_path)
+      assert isinstance(result, dict)
+      fv_key = next((k for k in result if isinstance(result[k], list)), None)
+      assert fv_key
+      assert len(result[fv_key]) > 0

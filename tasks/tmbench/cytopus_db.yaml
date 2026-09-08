@@ -1,0 +1,60 @@
+name: cytopus_db
+repo_url: https://github.com/wallet-maker/cytopus
+description: >
+  Initialize the Cytopus KnowledgeBase and generate a JSON file containing a nested
+  dictionary with gene set annotations organized by cell type, suitable for input
+  into the Spectra library. See the Cytopus README and the notebook at
+  notebooks/KnowledgeBase_queries_colaboratory.ipynb for usage examples.
+inputs:
+  celltype_of_interest: ["B", "CD4_T"]
+  global_celltypes: ["all-cells", "leukocyte"]
+  output_file: "/tmp/cytopus_out.json"
+expected_output: >
+  A dict with key 'keys' containing the list of top-level keys in the JSON file.
+  The JSON file at output_file must be valid and contain gene set annotations.
+requires_gpu: false
+
+validation_tests: |
+  import json
+  import os
+  from tool import run_tool
+
+  def test_produces_json_file():
+      out = "/tmp/cytopus_val.json"
+      result = run_tool(
+          celltype_of_interest=["B", "CD4_T"],
+          global_celltypes=["all-cells"],
+          output_file=out,
+      )
+      assert os.path.exists(out), f"Output JSON file not created at {out}"
+      with open(out) as f:
+          data = json.load(f)
+      assert isinstance(data, dict), f"JSON must be a dict, got {type(data)}"
+      assert len(data) > 0, "JSON dict is empty"
+
+  def test_returns_keys():
+      out = "/tmp/cytopus_val2.json"
+      result = run_tool(
+          celltype_of_interest=["B", "CD4_T"],
+          global_celltypes=["all-cells"],
+          output_file=out,
+      )
+      assert isinstance(result, dict)
+      keys = result.get("keys", [])
+      assert len(keys) > 0, f"Expected non-empty keys list, got: {keys}"
+
+  def test_cell_types_in_output():
+      out = "/tmp/cytopus_val3.json"
+      run_tool(
+          celltype_of_interest=["B", "CD4_T"],
+          global_celltypes=["all-cells"],
+          output_file=out,
+      )
+      with open(out) as f:
+          data = json.load(f)
+      keys_lower = [k.lower() for k in data.keys()]
+      # At least one of the requested cell types should appear in the output
+      assert any("b" in k or "cd4" in k or "all" in k or "leuk" in k
+                 for k in keys_lower), (
+          f"None of B/CD4_T/all-cells found in JSON keys: {list(data.keys())[:10]}"
+      )

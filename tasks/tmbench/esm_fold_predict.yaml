@@ -1,0 +1,54 @@
+name: esm_fold_predict
+repo_url: https://github.com/facebookresearch/esm
+description: >
+  Generate the representation of a protein sequence and the contact map using
+  Facebook Research's pretrained esm2_t33_650M_UR50D model (NOT ESMFold).
+  Follow the README example under "After pip install, you can load and use a
+  pretrained model as follows". Return the per-token sequence representation
+  (1D list of floats) and the predicted contact map (2D list of floats, shape LxL).
+inputs:
+  sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+expected_output: >
+  Dict with keys:
+    sequence_representation: list of floats (length = number of tokens)
+    contact_map: list of lists of floats (LxL where L = number of tokens)
+requires_gpu: false
+
+validation_tests: |
+  from tool import run_tool
+
+  SHORT_SEQ = "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+
+  def test_returns_sequence_representation():
+      result = run_tool(sequence=SHORT_SEQ)
+      assert isinstance(result, dict), f"Expected dict, got {type(result)}"
+      rep_key = next((k for k in result if "repr" in k.lower() or "embed" in k.lower()
+                      or "sequence" in k.lower()), None)
+      assert rep_key, f"No representation key found. Got: {list(result.keys())}"
+      rep = result[rep_key]
+      assert isinstance(rep, list), f"representation must be list, got {type(rep)}"
+      assert len(rep) > 0, "representation is empty"
+      assert all(isinstance(x, (int, float)) for x in rep), "representation must contain numbers"
+
+  def test_returns_contact_map():
+      result = run_tool(sequence=SHORT_SEQ)
+      cm_key = next((k for k in result if "contact" in k.lower() or "map" in k.lower()), None)
+      assert cm_key, f"No contact_map key found. Got: {list(result.keys())}"
+      cm = result[cm_key]
+      assert isinstance(cm, list), f"contact_map must be list, got {type(cm)}"
+      assert len(cm) > 0, "contact_map is empty"
+      assert isinstance(cm[0], list), "contact_map must be 2D (list of lists)"
+
+  def test_contact_map_is_square():
+      result = run_tool(sequence=SHORT_SEQ)
+      cm_key = next((k for k in result if "contact" in k.lower() or "map" in k.lower()), None)
+      if not cm_key:
+          return  # already caught above
+      cm = result[cm_key]
+      L = len(cm)
+      assert all(len(row) == L for row in cm), f"Contact map must be LxL, got irregular shape"
+
+  def test_short_sequence():
+      result = run_tool(sequence="ACDEFGHIKLMNPQRSTVWY")
+      assert isinstance(result, dict)
+      assert len(result) >= 2, f"Expected at least 2 keys, got: {list(result.keys())}"

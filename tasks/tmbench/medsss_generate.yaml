@@ -1,0 +1,30 @@
+name: medsss_generate
+repo_url: https://github.com/pixas/MedSSS
+description: >
+  Given a user message, generate a medical response using the MedSSS_Policy model.
+  MedSSS is a medical LLM trained with self-play search. Requires HuggingFace
+  access token (HF_TOKEN env var).
+inputs:
+  user_message: "How to stop a cough?"
+expected_output: >
+  Dict with key 'response' containing a string — the model's medical response.
+requires_gpu: true
+# STATUS: Blocked — requires HuggingFace access token for model download
+
+validation_tests: |
+  from tool import run_tool
+
+  def test_returns_response():
+      result = run_tool(user_message="How to stop a cough?")
+      assert isinstance(result, dict)
+      resp_key = next((k for k in result if "resp" in k.lower() or "output" in k.lower()
+                       or "text" in k.lower() or "answer" in k.lower()), None)
+      assert resp_key, f"No response key found. Got: {list(result.keys())}"
+      resp = result[resp_key]
+      assert isinstance(resp, str) and len(resp) > 10
+
+  def test_medical_response_not_empty():
+      result = run_tool(user_message="What is a fever?")
+      resp_key = next((k for k in result if isinstance(result[k], str)
+                       and len(result[k]) > 5), None)
+      assert resp_key, f"No non-empty string in result: {result}"

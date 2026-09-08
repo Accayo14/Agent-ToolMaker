@@ -1,0 +1,62 @@
+name: medsam_inference
+repo_url: https://github.com/bowang-lab/MedSAM
+description: >
+  Use the trained MedSAM model to segment a region in a medical image.
+  Given an input image path, a bounding box [x_min, y_min, x_max, y_max],
+  and an output segmentation file path, run MedSAM inference and save the
+  segmentation mask as a PNG. The model checkpoint (medsam_vit_b.pth) can be
+  downloaded from the MedSAM GitHub releases.
+inputs:
+  image_file: "/tmp/test_scan.jpg"
+  bounding_box: [25, 50, 150, 150]
+  segmentation_file: "/tmp/seg_out.png"
+expected_output: >
+  No return value required (returns empty dict or None is acceptable).
+  The segmentation PNG must be written to segmentation_file.
+requires_gpu: true
+
+validation_tests: |
+  import os
+  import numpy as np
+  from PIL import Image
+  from tool import run_tool
+
+  def _make_test_image(path, size=(256, 256)):
+      arr = np.random.randint(0, 200, (*size, 3), dtype=np.uint8)
+      Image.fromarray(arr).save(path)
+
+  def test_produces_segmentation_file():
+      img_path = "/tmp/val_scan.jpg"
+      out_path = "/tmp/val_seg.png"
+      _make_test_image(img_path)
+      if os.path.exists(out_path):
+          os.remove(out_path)
+      run_tool(
+          image_file=img_path,
+          bounding_box=[25, 50, 150, 150],
+          segmentation_file=out_path,
+      )
+      assert os.path.exists(out_path), f"Segmentation file not created at {out_path}"
+
+  def test_segmentation_is_valid_image():
+      img_path = "/tmp/val_scan2.jpg"
+      out_path = "/tmp/val_seg2.png"
+      _make_test_image(img_path)
+      run_tool(
+          image_file=img_path,
+          bounding_box=[25, 50, 150, 150],
+          segmentation_file=out_path,
+      )
+      seg = Image.open(out_path)
+      assert seg.size[0] > 0 and seg.size[1] > 0, "Segmentation image has zero dimensions"
+
+  def test_custom_output_path():
+      img_path = "/tmp/val_scan3.jpg"
+      out_path = "/tmp/custom_seg_output.png"
+      _make_test_image(img_path)
+      run_tool(
+          image_file=img_path,
+          bounding_box=[10, 10, 100, 100],
+          segmentation_file=out_path,
+      )
+      assert os.path.exists(out_path)

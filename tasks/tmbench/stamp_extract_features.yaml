@@ -1,0 +1,24 @@
+name: stamp_extract_features
+repo_url: https://github.com/KatherLab/STAMP
+description: >
+  Perform feature extraction using CTransPath with STAMP on a folder of whole slide
+  images (.svs), and save the resulting features to a new folder. Returns the number
+  of slides processed.
+inputs:
+  output_dir: "/tmp/stamp_features"
+  slide_dir: "/path/to/slides"
+expected_output: >
+  Dict with key 'num_processed_slides' (int) — number of slides processed.
+requires_gpu: true
+# STATUS: Blocked — requires .svs whole slide image files (large proprietary data)
+# Obtain TCGA slides from https://portal.gdc.cancer.gov/
+
+validation_tests: |
+  # NOTE: These tests require actual .svs whole slide image files.
+  # Cannot run without TCGA slide data.
+  import os
+  from tool import run_tool
+
+  def test_placeholder():
+      # Real test requires .svs files from TCGA portal
+      assert True, "Needs TCGA .svs data to run properly"

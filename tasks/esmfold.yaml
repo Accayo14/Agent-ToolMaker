@@ -1,0 +1,27 @@
+name: esmfold_protein_folding
+repo_url: https://github.com/facebookresearch/esm
+description: >
+  Use ESMFold to predict the 3D structure of a protein from its amino acid sequence.
+  Return the PDB-format structure as a string.
+inputs:
+  sequence: "MKTAYIAKQRQISFVKSHFSRQ"
+expected_output: >
+  A string containing PDB-format atom coordinates.
+  Should contain lines starting with "ATOM".
+requires_gpu: true
+
+validation_tests: |
+  from tool import run_tool
+
+  def test_returns_pdb_string():
+      result = run_tool(sequence="MKTAYIAKQRQISFVKSHFSRQ")
+      assert isinstance(result, dict)
+      pdb = result.get("pdb") or result.get("structure") or result.get("output", "")
+      assert isinstance(pdb, str), f"Expected PDB string, got {type(pdb)}"
+      assert "ATOM" in pdb, "PDB output must contain ATOM records"
+
+  def test_pdb_has_coordinates():
+      result = run_tool(sequence="MKTAYIAKQRQISFVKSHFSRQ")
+      pdb = result.get("pdb") or result.get("structure") or result.get("output", "")
+      lines = [l for l in pdb.splitlines() if l.startswith("ATOM")]
+      assert len(lines) > 5, f"Expected multiple ATOM lines, got {len(lines)}"

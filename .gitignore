@@ -1,0 +1,26 @@
+# Environment & secrets
+.env
+*.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Runtime data — not source code
+registry/tools.db
+trajectories/*.md
+*.log
+
+# Temp files from repo cloning
+/tmp/toolmaker_*
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp

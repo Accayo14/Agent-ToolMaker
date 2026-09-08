@@ -1,0 +1,45 @@
+name: modernbert_predict_masked
+repo_url: https://github.com/AnswerDotAI/ModernBERT
+description: >
+  Given a masked sentence string (with [MASK] token), predict the original sentence
+  using the pretrained ModernBERT-base model. The model should run on CPU.
+  Return the predicted sentence with [MASK] replaced by the predicted word.
+inputs:
+  input_string: "Paris is the [MASK] of France."
+expected_output: >
+  A dict with key 'prediction' containing the full sentence with [MASK] filled in.
+  Example: {"prediction": "Paris is the capital of France."}
+requires_gpu: false
+
+validation_tests: |
+  from tool import run_tool
+
+  def test_returns_dict_with_prediction():
+      result = run_tool(input_string="Paris is the [MASK] of France.")
+      assert isinstance(result, dict), f"Expected dict, got {type(result)}"
+      key = next((k for k in result if "pred" in k.lower() or "output" in k.lower()
+                  or "text" in k.lower() or "sentence" in k.lower()), None)
+      assert key is not None, f"Expected prediction key in result, got: {list(result.keys())}"
+
+  def test_mask_is_filled():
+      result = run_tool(input_string="The sky is [MASK] today.")
+      key = next((k for k in result if result[k] and isinstance(result[k], str)), None)
+      assert key, f"No string value in result: {result}"
+      pred = result[key]
+      assert "[MASK]" not in pred, f"[MASK] was not replaced in output: {pred}"
+      assert len(pred) > 5, f"Prediction too short: {pred}"
+
+  def test_capital_prediction():
+      # ModernBERT-base should reliably predict 'capital' for this classic fill-mask example
+      result = run_tool(input_string="Paris is the [MASK] of France.")
+      key = next((k for k in result if result[k] and isinstance(result[k], str)), None)
+      pred = result[key].lower() if key else ""
+      assert "capital" in pred or "city" in pred or "heart" in pred, (
+          f"Expected 'capital'/'city'/'heart' in prediction, got: {pred}"
+      )
+
+  def test_different_input():
+      result = run_tool(input_string="Water boils at 100 degrees [MASK].")
+      key = next((k for k in result if result[k] and isinstance(result[k], str)), None)
+      pred = result[key] if key else ""
+      assert len(pred) > 5

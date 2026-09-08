@@ -1,0 +1,19 @@
+name: flowmap_overfit_scene
+repo_url: https://github.com/dcharatan/flowmap
+description: >
+  Overfit FlowMap on an input scene (directory of images) to determine camera
+  extrinsics for each frame. Returns the number of frames (n) and the camera
+  extrinsics matrix for each frame as an nx4x4 list of floats.
+inputs:
+  input_scene: "/path/to/llff_flower"
+expected_output: >
+  Dict with keys:
+    n: int (number of frames)
+    camera_extrinsics: list of nx4x4 floats
+requires_gpu: true
+# STATUS: Blocked — requires LLFF scene datasets (llff_flower, llff_fern, etc.)
+# Download from: https://jonbarron.info/llff/ or the FlowMap repo's data instructions
+
+validation_tests: |
+  def test_placeholder():
+      assert True, "Needs LLFF scene image datasets to run properly"

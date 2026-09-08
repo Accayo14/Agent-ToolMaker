@@ -1,0 +1,21 @@
+name: stamp_train_classification_model
+repo_url: https://github.com/KatherLab/STAMP
+description: >
+  Train a biomarker classification model with STAMP. Given a directory of whole slide
+  images, a clinical data table (XLSX), a slide metadata table (CSV), and a target
+  biomarker column name, train a model and save it as a .pkl file. Returns
+  the number of parameters in the trained model.
+inputs:
+  slide_dir: "/path/to/slides"
+  clini_table: "/path/to/TCGA-BRCA-DX_CLINI.xlsx"
+  slide_table: "/path/to/TCGA-BRCA-DX_SLIDE.csv"
+  target_column: "TP53_driver"
+  trained_model_path: "/tmp/stamp_model.pkl"
+expected_output: >
+  Dict with key 'num_params' (int) — number of parameters in the trained model.
+requires_gpu: true
+# STATUS: Blocked — requires TCGA whole slide images + clinical/slide metadata tables
+
+validation_tests: |
+  def test_placeholder():
+      assert True, "Needs TCGA .svs data + clinical tables to run properly"

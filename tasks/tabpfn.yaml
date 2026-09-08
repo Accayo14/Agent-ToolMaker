@@ -1,0 +1,36 @@
+name: tabpfn_classification
+repo_url: https://github.com/automl/TabPFN
+description: >
+  Use TabPFN to train a classifier on a small tabular dataset and return
+  predictions for test samples. TabPFN is a prior-fitted network for tabular
+  classification that requires no hyperparameter tuning.
+inputs:
+  X_train: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]
+  y_train: [0, 1, 0, 1]
+  X_test: [[2.0, 3.0], [6.0, 7.0]]
+expected_output: >
+  A list of predicted class labels (integers 0 or 1) for each test sample.
+
+validation_tests: |
+  from tool import run_tool
+
+  def test_returns_predictions():
+      result = run_tool(
+          X_train=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
+          y_train=[0, 1, 0, 1],
+          X_test=[[2.0, 3.0], [6.0, 7.0]],
+      )
+      assert isinstance(result, dict), "run_tool must return a dict"
+      preds = result.get("predictions") or result.get("labels") or result.get("output")
+      assert preds is not None, f"Expected predictions key, got: {list(result.keys())}"
+      assert len(preds) == 2, f"Expected 2 predictions for 2 test samples, got {len(preds)}"
+
+  def test_predictions_are_valid_classes():
+      result = run_tool(
+          X_train=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]],
+          y_train=[0, 1, 0, 1],
+          X_test=[[2.0, 3.0], [6.0, 7.0]],
+      )
+      preds = result.get("predictions") or result.get("labels") or result.get("output")
+      for p in preds:
+          assert p in (0, 1), f"Prediction {p} is not a valid class label (expected 0 or 1)"

@@ -1,0 +1,23 @@
+name: nnunet_train_model
+repo_url: https://github.com/MIC-DKFZ/nnUNet
+description: >
+  Train a nnUNet model from scratch on a medical segmentation dataset in MSD
+  (Medical Segmentation Decathlon) format. The dataset must be converted from
+  MSD format using nnUNet's dataset conversion utilities. Returns the path to
+  the trained model checkpoint folder.
+inputs:
+  dataset_path: "/path/to/Task02_Heart"
+  dataset_id: "802"
+  dataset_name: "Heart"
+  unet_configuration: "3d_fullres"
+  fold: 0
+  output_folder: "/tmp/nnunet_trained"
+expected_output: >
+  Dict with key 'output_folder' (str) — path to where the trained model was saved.
+requires_gpu: true
+# STATUS: Blocked — requires MSD dataset (Task02_Heart, Task05_Prostate, etc.)
+# Download from: http://medicaldecathlon.com/
+
+validation_tests: |
+  def test_placeholder():
+      assert True, "Needs MSD medical segmentation dataset to run properly"

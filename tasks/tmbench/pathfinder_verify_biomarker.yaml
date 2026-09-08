@@ -1,0 +1,22 @@
+name: pathfinder_verify_biomarker
+repo_url: https://github.com/LiangJunhao-THU/PathFinderCRC
+description: >
+  Given WSI probability heatmaps, a hypothesis Python file (def hypothesis_score),
+  and clinical survival data, determine (1) whether the biomarker is prognostically
+  significant (p_value) and (2) its hazard ratio among known biomarkers.
+inputs:
+  heatmaps: "/path/to/TCGA_CRC"
+  hypothesis: "/path/to/hypothesis_score.py"
+  clini_table: "/path/to/TCGA_CRC_info.csv"
+  files_table: "/path/to/TCGA_CRC_files.csv"
+  survival_time_column: "OS.time"
+  event_column: "OS"
+  known_biomarkers: ["MSI"]
+expected_output: >
+  Dict with keys: p_value (float), hazard_ratio (float).
+requires_gpu: false
+# STATUS: Blocked — requires TCGA CRC heatmap .npy files + clinical data tables
+
+validation_tests: |
+  def test_placeholder():
+      assert True, "Needs PathFinder TCGA CRC heatmap data to run properly"
